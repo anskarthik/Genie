@@ -1,8 +1,9 @@
 package com.coacle.genie.api;
 
-import com.coacle.genie.exception.UserAlreadyExistsExcepton;
+import com.coacle.genie.exception.EmailAlreadyExistsException;
 import com.coacle.genie.exception.UserNotFoundException;
 import com.coacle.genie.model.User;
+import com.coacle.genie.model.UserDto;
 import com.coacle.genie.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -21,15 +21,10 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @GetMapping
-    public List<User> getUsers() {
-        return userService.getUsers();
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getUser(@PathVariable String id) {
+    @GetMapping("/{email}")
+    public ResponseEntity<User> getUser(@PathVariable String email) {
         try {
-            User user = userService.getUser(id);
+            User user = userService.getUser(email);
             return ResponseEntity.ok(user);
         } catch (UserNotFoundException e) {
             return ResponseEntity.notFound().build();
@@ -37,20 +32,20 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<?> addUser(@RequestBody User user) {
+    public ResponseEntity<?> addUserAccount(@RequestBody UserDto userDto) {
         try {
-            String id = userService.addUser(user);
+            User user = userService.addUserAccount(userDto);
 
             URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                     .path("/{id}")
-                    .buildAndExpand(id)
+                    .buildAndExpand(user.getEmail())
                     .toUri();
             return ResponseEntity.created(location).build();
 
-        } catch (UserAlreadyExistsExcepton e) {
+        } catch (EmailAlreadyExistsException e) {
             URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                     .path("/{id}")
-                    .buildAndExpand(e.getUserId())
+                    .buildAndExpand(e.getEmail())
                     .toUri();
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .header(HttpHeaders.LOCATION, location.toString())
@@ -58,11 +53,31 @@ public class UserController {
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> removeUser(@PathVariable String id) {
+    @GetMapping("/{email}/enable")
+    public ResponseEntity<String> enableUserAccount(@PathVariable String email) {
         try {
-            userService.removeUserById(id);
-            return ResponseEntity.noContent().build();
+            userService.enableUserAccount(email);
+            return ResponseEntity.ok("Account: " + email + " enabled");
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/{email}/disable")
+    public ResponseEntity<String> disableUserAccount(@PathVariable String email) {
+        try {
+            userService.disableUserAccount(email);
+            return ResponseEntity.ok("Account: " + email + " disabled");
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/{email}")
+    public ResponseEntity<?> removeUserAccount(@PathVariable String email) {
+        try {
+            User user = userService.removeUserByEmail(email);
+            return ResponseEntity.ok("User account: " + email + " deleted");
         } catch (UserNotFoundException e) {
             return ResponseEntity.notFound().build();
         }
