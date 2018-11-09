@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.net.URI;
 
 @RestController
@@ -74,9 +76,12 @@ public class UserController {
     }
 
     @DeleteMapping("/{email}")
-    public ResponseEntity<?> removeUserAccount(@PathVariable String email) {
+    public ResponseEntity<?> removeUserAccount(HttpServletRequest request, @PathVariable String email) {
         try {
             User user = userService.removeUserByEmail(email);
+            HttpSession session =
+                    request.getSession();
+            session.invalidate();
             return ResponseEntity.ok("User account: " + email + " deleted");
         } catch (UserNotFoundException e) {
             return ResponseEntity.notFound().build();
