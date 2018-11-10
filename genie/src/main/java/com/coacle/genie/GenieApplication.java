@@ -18,13 +18,17 @@ public class GenieApplication implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         UserDto userDto = new UserDto();
         userDto.setEmail("admin");
         userDto.setMatchingPassword("password");
         userDto.setName("admin");
         userDto.setPassword("password");
-        userService.addUserAccount(userDto);
-        userService.enableUserAccount(userDto.getEmail());
+        try {
+            userService.addUserAccount(userDto);
+            userService.enableUserAccount(userDto.getEmail());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

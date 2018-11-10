@@ -1,24 +1,31 @@
 package com.coacle.genie.api;
 
+import com.coacle.genie.event.OnRegistrationCompleteEvent;
 import com.coacle.genie.exception.EmailAlreadyExistsException;
 import com.coacle.genie.exception.UserNotFoundException;
 import com.coacle.genie.model.User;
 import com.coacle.genie.model.UserDto;
 import com.coacle.genie.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import javax.validation.Valid;
 import java.net.URI;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
+
+    @Autowired
+    ApplicationEventPublisher eventPublisher;
 
     @Autowired
     private UserService userService;
@@ -34,9 +41,14 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<?> addUserAccount(@RequestBody UserDto userDto) {
+    public ResponseEntity<?> addUserAccount(@RequestBody @Valid UserDto userDto,
+                                            WebRequest request) {
         try {
             User user = userService.addUserAccount(userDto);
+
+            String appUrl = request.getContextPath();
+            eventPublisher.publishEvent(
+                    new OnRegistrationCompleteEvent(user, request.getLocale(), appUrl));
 
             URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                     .path("/{id}")

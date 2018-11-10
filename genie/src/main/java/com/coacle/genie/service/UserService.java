@@ -3,8 +3,10 @@ package com.coacle.genie.service;
 import com.coacle.genie.exception.EmailAlreadyExistsException;
 import com.coacle.genie.exception.UserNotFoundException;
 import com.coacle.genie.jpa.UserRepository;
+import com.coacle.genie.jpa.VerificationTokenRepository;
 import com.coacle.genie.model.User;
 import com.coacle.genie.model.UserDto;
+import com.coacle.genie.model.VerificationToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -20,6 +22,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private VerificationTokenRepository tokenRepository;
 
     public User getUser(String email) throws UserNotFoundException {
         User user = userRepository.findByEmail(email);
@@ -64,4 +69,16 @@ public class UserService {
         return user;
     }
 
+    public void createVerificationToken(User user, String token) {
+        VerificationToken verificationToken = new VerificationToken(user, token);
+        tokenRepository.save(verificationToken);
+    }
+
+    public VerificationToken getVerificationToken(String token) {
+        return tokenRepository.findByToken(token);
+    }
+
+    public void saveUser(User user) {
+        userRepository.save(user);
+    }
 }
