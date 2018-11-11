@@ -3,9 +3,7 @@ package com.coacle.genie.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.util.List;
 
 @Data
@@ -24,5 +22,9 @@ public class User {
 
     @ElementCollection
     private List<String> roles;
+
+    @JsonIgnore
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "user")
+    private List<VerificationToken> verificationTokens;
 
 }
